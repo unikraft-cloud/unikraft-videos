@@ -63,7 +63,8 @@ export const TERM = {
 
 export const FONT = {
   sans: '"InterVariable", "Inter", system-ui, sans-serif',
-  mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+  // Plex Mono has no geometric shapes (■ ● ○): the bundled Inter covers them, so renders don't depend on system fonts.
+  mono: '"IBM Plex Mono", "InterVariable", ui-monospace, SFMono-Regular, Menlo, monospace',
 } as const;
 
 /** Site typography recipes, scaled for a 1920×1080 canvas. */

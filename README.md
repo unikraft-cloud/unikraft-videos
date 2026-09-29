@@ -51,5 +51,5 @@ Working with an AI agent? Point it at [`AGENTS.md`](AGENTS.md) (the playbook) an
 - Remotion is free for individuals and companies of up to 3 people. Larger companies need a
   [Remotion Company License](https://www.remotion.dev/docs/license). Check before sharing renders
   across the team.
-- Fonts: Inter and JetBrains Mono (SIL OFL 1.1). Icons: Solar (CC BY 4.0) and Material Design Icons
+- Fonts: Inter and IBM Plex Mono (SIL OFL 1.1). Icons: Solar (CC BY 4.0) and Material Design Icons
   (Apache 2.0), via Iconify.

@@ -41,7 +41,7 @@ const LINES: TermLine[] = [
   { kind: 'success', text: 'replied in', value: '8.4 ms', at: REPLIED_AT - 3 },
 ];
 
-// Terminal geometry (fontSize 26 → chrome scale s = 2; JetBrains Mono advance = 0.6em).
+// Terminal geometry (fontSize 26 → chrome scale s = 2; IBM Plex Mono advance = 0.6em).
 const TERM_W = 1060;
 const TERM_FS = 26;
 const TERM_X = 742;

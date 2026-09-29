@@ -33,7 +33,7 @@ Use `alpha(hex, a)` and `mix(a, b, t)`. Don't add new hex values. If a colour is
 - **Display headline**: InterVariable 700, `-0.05em` tracking, leading 0.95 (`TYPE.display`, `<Display>`).
   96–200 px. One idea per headline, ≤ 8 words.
 - **Title**: Inter 500, `-0.035em` (`TYPE.title`). Sub-headlines, card titles.
-- **Mono eyebrow/label**: JetBrains Mono 500, uppercase, `0.05–0.14em` tracking (`TYPE.eyebrow`, `<Mono>`).
+- **Mono eyebrow/label**: IBM Plex Mono 500, uppercase, `0.05–0.14em` tracking (`TYPE.eyebrow`, `<Mono>`).
   26 px minimum on screen.
 - **Mono comment**: `// pick all three.`: the dev voice. Typed on with `scramble`, blue-100, glow when done.
 - Numbers: tabular (`fontVariantNumeric: 'tabular-nums'`), count up with `fmtInt`, and lock with a `hit`.

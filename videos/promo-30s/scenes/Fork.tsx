@@ -4,7 +4,7 @@ import { Backdrop } from '../../../kit/design/Backdrop';
 import { Icon } from '../../../kit/design/Icon';
 import { clamp, EASE, lerp, pop, progress, shake } from '../../../kit/design/motion';
 import { Accent, Display, Mono, Move } from '../../../kit/design/Text';
-import { alpha, C, mix } from '../../../kit/design/tokens';
+import { alpha, C, FONT, mix } from '../../../kit/design/tokens';
 import { manhattanPath, pointOnPath, Wire } from '../../../kit/design/Wire';
 
 /*
@@ -328,7 +328,7 @@ export const Fork: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
           <span
             style={{
-              fontFamily: '"JetBrains Mono", monospace',
+              fontFamily: FONT.mono,
               fontSize: 76,
               lineHeight: 1,
               color: C.blue400,
