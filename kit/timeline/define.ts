@@ -10,6 +10,7 @@
  *
  * Pure data with `.ts`-extension imports only (plain Node loads it).
  */
+import { DUR } from './durations.ts';
 import { makeGrid, type Grid } from './grid.ts';
 import { PRESETS, type Energy, type Preset, type PresetName } from './presets.ts';
 
@@ -52,7 +53,10 @@ export type SceneSpec = {
   beats: number;
   /** 1-based index into `chapters` for the HUD eyebrow; `null`/omitted hides the HUD. */
   chapter?: number | null;
-  /** Named moments in beats from the scene start. Scenes animate on these; cues and reads reference them. */
+  /**
+   * Named moments in beats from the scene start. Scenes animate on these; cues and reads reference them.
+   * `exit` (where the exit animation starts: `DUR.exit` before the end) is added unless given.
+   */
   marks?: Readonly<Record<string, number>>;
   cues?: readonly SceneCue[];
   reads?: readonly Read[];
@@ -179,7 +183,7 @@ export const defineVideo = (spec: VideoSpec): Video => {
     if (chapter !== null && (chapter < 1 || chapter > spec.chapters.length)) {
       throw new Error(`${where}: chapter ${chapter} not in 1…${spec.chapters.length}`);
     }
-    const marks = s.marks ?? {};
+    const marks = { exit: s.beats - (DUR.exit * preset.motion) / grid.framesPerBeat, ...s.marks };
     for (const [name, beat] of Object.entries(marks)) {
       if (beat < 0 || beat > s.beats) {
         throw new Error(`${where}: mark "${name}" at ${beat} is outside 0…${s.beats}`);

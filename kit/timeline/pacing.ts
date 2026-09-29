@@ -135,3 +135,28 @@ export const checkVideo = (video: Video, override?: Preset): PacingReport => {
     issues,
   };
 };
+
+/** The report as printed by `npm run check` / `npm run review`. */
+export const formatReport = (r: PacingReport): string => {
+  const out = [
+    `${r.video} · ${r.seconds.toFixed(1)} s · checked as "${r.preset}"${r.enforced ? '' : ' (report only)'}`,
+    '  #   scene              start    len  words  read  accents',
+  ];
+  r.scenes.forEach((s, i) => {
+    const tight = s.need > s.seconds ? ' ◀' : '';
+    out.push(
+      `  ${String(i + 1).padStart(2)}  ${s.id.padEnd(17)} ${s.start.toFixed(1).padStart(6)} ${s.seconds.toFixed(1).padStart(6)} ${String(s.words).padStart(6)} ${s.need.toFixed(1).padStart(5)} ${String(s.accents).padStart(8)}${tight}`,
+    );
+  });
+  const mean = r.scenes.reduce((t, s) => t + s.seconds, 0) / r.scenes.length;
+  out.push(`  average shot ${mean.toFixed(1)} s over ${r.scenes.length} scenes`);
+  for (const issue of r.issues) {
+    out.push(
+      `  ${issue.severity === 'error' ? 'ERROR' : 'warn '} ${issue.scene ? `${issue.scene}: ` : ''}${issue.message}`,
+    );
+  }
+  if (!r.issues.length) {
+    out.push('  ✓ within budget');
+  }
+  return out.join('\n');
+};

@@ -11,11 +11,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BPM, CUES, MUSIC, TOTAL_BEATS, VIDEO } from './video.ts';
+import { BPM, CUES, TOTAL_BEATS, VIDEO } from './video.ts';
 import { Biquad, db, Rng, smooth, softClip, SR, stereo, toDb, type Stereo } from './dsp.ts';
 import { compress, limit, loudness, pingPong, reverb, truePeakDb } from './fx.ts';
 import { applyDucks, gainBus, lowpassBus, Mixer, renderLane, type DryBus, type SendBus } from './mixer.ts';
-import { gapGain, musicFilterLane, renderMusic } from './music.ts';
+import { FADE_BEATS, gapGain, musicFilterLane, renderMusic } from './music.ts';
 import { at, TOTAL_SAMPLES } from './score.ts';
 import { renderCues } from './sfx.ts';
 
@@ -27,8 +27,6 @@ const MASTER = {
   maxTruePeak: -1,
   /** Soft-clip knee (linear) ahead of the limiter. */
   clipKnee: 0.6,
-  /** Master fade to digital silence over the last N beats of the finale. */
-  fadeBeats: 2,
 };
 
 /** Bus faders (dB) into the master. */
@@ -99,10 +97,10 @@ const preGain = db(-20 - loudness(sum).integrated);
 scale(sum, preGain);
 const glueGr = compress(sum, { thresholdDb: -16, ratio: 2, kneeDb: 6, attackMs: 12, releaseMs: 160 });
 
+// Master fade to digital silence over the end (length set by the last section, see music.ts).
 const fade = new Float32Array(n).fill(1);
 {
-  const end = MUSIC[MUSIC.length - 1].to;
-  const from = at(end - MASTER.fadeBeats);
+  const from = at(TOTAL_BEATS - FADE_BEATS);
   for (let i = from; i < n; i++) {
     fade[i] = 1 - smooth((i - from) / (n - 1 - from));
   }

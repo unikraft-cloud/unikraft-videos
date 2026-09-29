@@ -3,14 +3,15 @@
  * the video's timeline so picture and sound share one clock.
  */
 import type { MusicSection } from '../timeline/define.ts';
-import { BPM, CUES, MUSIC, SECONDS_PER_BEAT, TOTAL_BEATS } from './video.ts';
+import { CUES, MUSIC, SECONDS_PER_BEAT, TOTAL_BEATS, VIDEO } from './video.ts';
 import { SR } from './dsp.ts';
 
-export const SAMPLES_PER_BEAT = SR * SECONDS_PER_BEAT;
-if (!Number.isInteger(SAMPLES_PER_BEAT) || BPM * SECONDS_PER_BEAT !== 60) {
-  throw new Error(`Beat grid must be sample-exact: ${SAMPLES_PER_BEAT} samples/beat at ${BPM} BPM`);
+/** Whole samples per beat at any grid-exact tempo (`makeGrid` rejects the rest). */
+export const SAMPLES_PER_BEAT = VIDEO.grid.samplesPerBeat;
+if (!Number.isInteger(SAMPLES_PER_BEAT) || SAMPLES_PER_BEAT !== SR * SECONDS_PER_BEAT) {
+  throw new Error(`Beat grid must be sample-exact: ${SAMPLES_PER_BEAT} samples/beat at ${VIDEO.grid.bpm} BPM`);
 }
-export const TOTAL_SAMPLES = TOTAL_BEATS * SAMPLES_PER_BEAT;
+export const TOTAL_SAMPLES = Math.round(TOTAL_BEATS * SAMPLES_PER_BEAT);
 
 /** Absolute beat → sample index. Every cue/note start goes through here, so onsets are sample-accurate. */
 export const at = (beat: number): number => Math.round(beat * SAMPLES_PER_BEAT);
@@ -45,34 +46,49 @@ const CADENCE: readonly Chord[] = [
   { name: 'E', root: 28, voicing: [56, 59, 64, 68, 76] },
 ];
 
-/** One chord per bar, Am – F – C – G, from the first groove bar on. */
+/** One chord per bar, Am – F – C – G, over the bars of every progression section (not intro / sting / finale). */
 const PROGRESSION: readonly Chord[] = [AM, FMAJ7, CMAJ7, GADD9];
-const PROGRESSION_START = MUSIC.find((s) => s.name === 'groove')?.from ?? 12;
+const OFF_PROGRESSION: readonly MusicSection['name'][] = ['intro', 'sting', 'finale'];
 
-/** The break's cadence stabs double its `hit` cues. */
-export const BREAK_HITS: readonly number[] = CUES.filter(
-  (c) => c.kind === 'hit' && sectionAt(c.beat).name === 'break',
-).map((c) => c.beat);
+/**
+ * Progression bar index at each section's first beat: bars (a partial last bar counts as one)
+ * of the progression sections before it, so chord changes always land on a section's own bar lines.
+ */
+const BAR_OFFSET = new Map<MusicSection, number>();
+{
+  let bars = 0;
+  for (const s of MUSIC) {
+    BAR_OFFSET.set(s, bars);
+    if (!OFF_PROGRESSION.includes(s.name)) {
+      bars += Math.ceil((s.to - s.from) / 4);
+    }
+  }
+}
+
+/** The `hit` cues inside break section `s`: its cadence stabs double them. */
+export const breakHits = (s: MusicSection): number[] =>
+  CUES.filter((c) => c.kind === 'hit' && c.beat >= s.from && c.beat < s.to).map((c) => c.beat);
+const BREAK_HITS = new Map(MUSIC.filter((s) => s.name === 'break').map((s) => [s, breakHits(s)]));
 
 export const cadenceChord = (index: number): Chord => CADENCE[Math.min(index, CADENCE.length - 1)];
 
 /** Harmony at an absolute beat — also used to tune melodic SFX so every ping sits in the chord. */
 export const chordAt = (beat: number): Chord => {
-  const { name } = sectionAt(beat);
-  if (name === 'intro') {
+  const s = sectionAt(beat);
+  if (s.name === 'intro') {
     return DRONE;
   }
-  if (name === 'sting' || name === 'finale') {
+  if (s.name === 'sting' || s.name === 'finale') {
     return AM_WIDE;
   }
-  if (name === 'break') {
-    const passed = BREAK_HITS.filter((b) => b <= beat).length;
+  if (s.name === 'break') {
+    const passed = (BREAK_HITS.get(s) ?? []).filter((b) => b <= beat).length;
     if (passed > 0) {
       return cadenceChord(passed - 1);
     }
   }
-  const bar = Math.floor((beat - PROGRESSION_START) / 4);
-  return PROGRESSION[((bar % 4) + 4) % 4];
+  const bar = (BAR_OFFSET.get(s) ?? 0) + Math.floor((beat - s.from) / 4);
+  return PROGRESSION[bar % 4];
 };
 
 /** Chord tones of `chord` transposed into the octave starting at `lowMidi`, ascending (for bells/blips). */

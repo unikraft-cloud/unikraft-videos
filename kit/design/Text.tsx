@@ -198,3 +198,21 @@ export const Mono: React.FC<{
 export const Accent: React.FC<{ children: React.ReactNode; color?: string }> = ({ children, color = C.blue400 }) => (
   <span style={{ color }}>{children}</span>
 );
+
+/**
+ * Copy with `[bracketed]` runs in the brand accent: `Build [AI agents] fast.`
+ * The recipe convention for "one accent phrase per headline".
+ */
+export const AccentText: React.FC<{ text: string; color?: string }> = ({ text, color = C.blue400 }) => (
+  <>
+    {text.split(/(\[[^\]]*\])/).map((part, i) =>
+      part.startsWith('[') ? (
+        <span key={i} style={{ color }}>
+          {part.slice(1, -1)}
+        </span>
+      ) : (
+        <span key={i}>{part}</span>
+      ),
+    )}
+  </>
+);

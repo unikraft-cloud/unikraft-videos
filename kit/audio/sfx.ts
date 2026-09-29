@@ -4,12 +4,13 @@
  * swells instead *end* exactly on `beat + len`; whooshes peak on the beat).
  * Tonal cues take their pitches from the chord playing at that beat.
  */
-import type { Cue, CueKind } from '../timeline/define.ts';
+import { ACCENT_KINDS, type Cue, type CueKind } from '../timeline/define.ts';
+import type { Energy } from '../timeline/presets.ts';
 import { Biquad, CONTROL, cents, db, EDGE, edges, lerp, ms, mtof, panL, panR, Pulse, Rng, Saw, sec, Sine, smooth, SR, stereo, Svf, TAU, xerp, type Stereo } from './dsp.ts';
 import { reverb } from './fx.ts';
 import { normalize } from './instruments.ts';
 import type { Mixer } from './mixer.ts';
-import { at, bs, chordAt, chordTones } from './score.ts';
+import { at, bs, chordAt, chordTones, sectionAt } from './score.ts';
 
 /** Per-kind level (dB re. peak-normalised render), send levels and side-chain pressure on the music/bass buses. */
 export const SFX_MIX: Record<CueKind, { gain: number; rev: number; dly: number; duck?: { depth: number; tau: number } }> = {
@@ -27,6 +28,18 @@ export const SFX_MIX: Record<CueKind, { gain: number; rev: number; dly: number; 
   ticks: { gain: -9, rev: 0.12, dly: 0.15 },
   countUp: { gain: -9, rev: 0.1, dly: 0.2 },
   shimmer: { gain: -8, rev: 0.6, dly: 0.4 },
+};
+
+/**
+ * Cue trim by the energy of the music section under it: over calmer beds accents (dB) and other cues
+ * come down a little and side-chain pressure eases, so hits sit in the mix instead of jumping out of it
+ * once the master normalises loudness. Energy 2 (the promo) is the reference: no change.
+ */
+const ENERGY_TRIM: Record<Energy, { accent: number; other: number; duck: number }> = {
+  0: { accent: -3, other: -1.5, duck: 0.5 },
+  1: { accent: -2, other: -1, duck: 0.7 },
+  2: { accent: 0, other: 0, duck: 1 },
+  3: { accent: 0.5, other: 0, duck: 1 },
 };
 
 type Rendered = { snd: Stereo; /** Samples relative to the cue's beat (negative = pre-roll). */ offset: number };
@@ -516,11 +529,13 @@ export const renderCues = (mix: Mixer, cues: readonly Cue[]): void => {
     runs[cue.kind] = { beat: cue.beat, run };
     const { snd, offset } = RENDER[cue.kind]({ cue, seed: `${cue.kind}@${cue.beat}`, run });
     const m = SFX_MIX[cue.kind];
-    const gain = db(m.gain) * (cue.gain ?? 1);
+    const trim = ENERGY_TRIM[sectionAt(cue.beat).energy];
+    const gain = db(m.gain + (ACCENT_KINDS.includes(cue.kind) ? trim.accent : trim.other)) * (cue.gain ?? 1);
     mix.add('sfx', snd, cue.beat, { gain, rev: m.rev, dly: m.dly }, offset);
     if (m.duck) {
-      mix.ducks.music.push({ beat: cue.beat, depth: m.duck.depth * Math.min(1, cue.gain ?? 1), tau: m.duck.tau });
-      mix.ducks.bass.push({ beat: cue.beat, depth: Math.min(0.95, m.duck.depth * 1.2), tau: m.duck.tau });
+      const depth = m.duck.depth * trim.duck;
+      mix.ducks.music.push({ beat: cue.beat, depth: depth * Math.min(1, cue.gain ?? 1), tau: m.duck.tau });
+      mix.ducks.bass.push({ beat: cue.beat, depth: Math.min(0.95, depth * 1.2), tau: m.duck.tau });
     }
   }
 };

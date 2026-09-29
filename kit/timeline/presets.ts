@@ -28,6 +28,8 @@ export type Preset = {
   snap: number;
   /** Scale on recipe entrance/exit durations (1 = the promo's snap). */
   motion: number;
+  /** Scale on camera shake / punch-in amplitudes (1 = the promo's). */
+  shake: number;
   /** Default music energy for every section that doesn't set its own. */
   energy: Energy;
 };
@@ -43,6 +45,7 @@ export const PRESETS: Record<PresetName, Preset> = {
     accentGap: 0.5,
     snap: 1,
     motion: 1,
+    shake: 1,
     energy: 2,
   },
   /** Default for new videos: 60–90 s, every line readable, one idea per shot. */
@@ -55,6 +58,7 @@ export const PRESETS: Record<PresetName, Preset> = {
     accentGap: 1,
     snap: 4,
     motion: 1.25,
+    shake: 0.5,
     energy: 1,
   },
   /** Product walkthroughs / tutorials: terminal demos and diagrams get room to breathe. */
@@ -67,6 +71,7 @@ export const PRESETS: Record<PresetName, Preset> = {
     accentGap: 2,
     snap: 4,
     motion: 1.4,
+    shake: 0.3,
     energy: 1,
   },
 };

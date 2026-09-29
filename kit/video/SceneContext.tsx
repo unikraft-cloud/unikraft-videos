@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { DUR, type DurName } from '../design/motion';
 import { resolveAt, type At, type Scene, type Video } from '../timeline/define';
+import { DUR, type DurName } from '../timeline/durations';
 
 export type SceneApi<P> = {
   video: Video;
