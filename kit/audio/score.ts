@@ -46,9 +46,9 @@ const CADENCE: readonly Chord[] = [
   { name: 'E', root: 28, voicing: [56, 59, 64, 68, 76] },
 ];
 
-/** One chord per bar, Am – F – C – G, over the bars of every progression section (not intro / sting / finale). */
+/** One chord per bar, Am – F – C – G, over the bars of every progression section (not intro / sting / finale / silent). */
 const PROGRESSION: readonly Chord[] = [AM, FMAJ7, CMAJ7, GADD9];
-const OFF_PROGRESSION: readonly MusicSection['name'][] = ['intro', 'sting', 'finale'];
+const OFF_PROGRESSION: readonly MusicSection['name'][] = ['intro', 'sting', 'finale', 'silent'];
 
 /**
  * Progression bar index at each section's first beat: bars (a partial last bar counts as one)
@@ -75,7 +75,7 @@ export const cadenceChord = (index: number): Chord => CADENCE[Math.min(index, CA
 /** Harmony at an absolute beat — also used to tune melodic SFX so every ping sits in the chord. */
 export const chordAt = (beat: number): Chord => {
   const s = sectionAt(beat);
-  if (s.name === 'intro') {
+  if (s.name === 'intro' || s.name === 'silent') {
     return DRONE;
   }
   if (s.name === 'sting' || s.name === 'finale') {

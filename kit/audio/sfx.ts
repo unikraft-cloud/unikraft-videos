@@ -308,7 +308,7 @@ const type = ({ cue, seed }: Ctx): Rendered => {
 
 // ─── Transitions ────────────────────────────────────────────────────────────
 
-/** Fast sweep: band-passed noise swelling over a short pre-roll, peaking on the beat, panning L → R. */
+/** Fast sweep: band-passed noise swelling over a short pre-roll, peaking on the beat, panning L → R. Honours `pitch`. */
 const whoosh = ({ cue, seed }: Ctx): Rendered => {
   const pre = sec(0.12);
   const post = sec(bs(cue.len ?? 0.7));
@@ -321,7 +321,7 @@ const whoosh = ({ cue, seed }: Ctx): Rendered => {
     const rise = i < pre;
     const p = rise ? i / pre : (i - pre) / post;
     if (i % CONTROL === 0) {
-      const f = rise ? xerp(500, 4800, p) : xerp(4800, 700, p);
+      const f = (rise ? xerp(500, 4800, p) : xerp(4800, 700, p)) * (cue.pitch ?? 1);
       fl.set(f, 1.3);
       fr.set(f * 1.08, 1.3);
     }

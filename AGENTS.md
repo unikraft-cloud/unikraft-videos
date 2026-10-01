@@ -39,6 +39,7 @@ npm run lint                               # eslint + tsc
    bar lines; recipe scenes are whole bars in explainer and walkthrough, so any scene start works.
    Typical arc: `intro` → `sting` (on a logo) → `groove` → `dark` (the problem) → `groove` → `build`
    → `break` → `finale`. Set `energy` per section if you need to (0–3, default 1 for explainer).
+   `silent` plays no music (SFX only), for short bumpers and outros.
 5. **`npm run check`** until it's clean. Fix errors by lengthening (`hold`) or cutting copy. Never
    silence the check. `pacing: 'report'` is only for the legacy promo.
 6. **`npm run review`** and look at `sheet.png`. Every tile is a moment where its copy should be

@@ -560,6 +560,7 @@ export const renderMusic = (mix: Mixer): void => {
         }
       }
     },
+    silent: () => {},
   };
 
   for (const s of MUSIC) {
@@ -610,6 +611,10 @@ export const musicFilterLane = (): Point[] => {
     finale: (s, e) => [
       [s.from, ([4000, 6000, 9000, 12_000] as PerEnergy)[e]],
       [s.to, ([1500, 2000, 2500, 3000] as PerEnergy)[e]],
+    ],
+    silent: (s) => [
+      [s.from, 18_000],
+      [s.to - 0.01, 18_000],
     ],
   };
   return MUSIC.flatMap((s) => shape[s.name](s, s.energy));

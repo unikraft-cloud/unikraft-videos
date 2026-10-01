@@ -33,8 +33,11 @@ export type CueKind =
 /** Cue kinds that read as a hit; the pacing checker spaces these by `preset.accentGap`. */
 export const ACCENT_KINDS: readonly CueKind[] = ['impact', 'boom', 'hit', 'clang', 'glitch'];
 
-/** An absolute cue (beats from the top of the video), as consumed by the soundtrack. */
-export type Cue = { beat: number; kind: CueKind; len?: number; gain?: number };
+/**
+ * An absolute cue (beats from the top of the video), as consumed by the soundtrack.
+ * `pitch` scales the cue's frequencies (1 = as designed, 0.5 = an octave down); only `whoosh` reads it.
+ */
+export type Cue = { beat: number; kind: CueKind; len?: number; gain?: number; pitch?: number };
 
 /**
  * A beat inside a scene: a number (beats from the scene start), a mark name,
@@ -42,7 +45,7 @@ export type Cue = { beat: number; kind: CueKind; len?: number; gain?: number };
  */
 export type At = number | string;
 
-export type SceneCue = { at: At; kind: CueKind; len?: number; gain?: number };
+export type SceneCue = { at: At; kind: CueKind; len?: number; gain?: number; pitch?: number };
 
 /** On-screen copy that must be readable: fully legible at `at`, starts leaving at `until` (default: scene end). */
 export type Read = { text: string; at: At; until?: At };
@@ -71,7 +74,8 @@ export type PlanContext = { preset: Preset; grid: Grid };
 /** A scene, or a planner that sizes a scene for the video's preset (what recipe helpers return). */
 export type SceneInput = SceneSpec | ((ctx: PlanContext) => SceneSpec);
 
-export type MusicSectionName = 'intro' | 'sting' | 'groove' | 'dark' | 'build' | 'break' | 'finale';
+/** `silent`: no music at all (SFX only), for stings and bumpers; tonal cues tune to the intro drone. */
+export type MusicSectionName = 'intro' | 'sting' | 'groove' | 'dark' | 'build' | 'break' | 'finale' | 'silent';
 
 /**
  * A music section, running until `until`: a scene id (its start), a scene id with an
@@ -197,6 +201,7 @@ export const defineVideo = (spec: VideoSpec): Video => {
       const cue: Cue = { beat, kind: c.kind };
       if (c.len !== undefined) cue.len = c.len;
       if (c.gain !== undefined) cue.gain = c.gain;
+      if (c.pitch !== undefined) cue.pitch = c.pitch;
       return cue;
     });
     const reads = (s.reads ?? []).map((r): ResolvedRead => {

@@ -90,7 +90,8 @@ The rule that fixes the promo's one flaw: **motion stays fast, dwell gets longer
 - The soundtrack is procedural and generated from the timeline (`kit/audio`), so every cut and hit lands
   on the sample. Don't drop in stock music unless you have to. If you do, match `preset.bpm`.
 - Music sections: `intro` (drone, builds), `sting` (logo), `groove`, `dark` (tension, filtered), `build`
-  (riser into a drop), `break` (cadence stabs on its `hit` cues, then silence), `finale` (wide chord, fade).
+  (riser into a drop), `break` (cadence stabs on its `hit` cues, then silence), `finale` (wide chord, fade),
+  `silent` (no music, SFX only: bumpers and outros).
   Place them with `until: '<sceneId>'`, on bar lines.
 - `energy` per section: 0 pads only · 1 half-time, sparse (explainer default) · 2 full groove (the promo) ·
   3 lifted.
