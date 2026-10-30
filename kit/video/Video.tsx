@@ -6,6 +6,7 @@ import { Hud } from '../overlays/Hud';
 import { RECIPES } from '../recipes';
 import type { Video } from '../timeline/define';
 import { SceneContext } from './SceneContext';
+import { Slate } from './Slate';
 
 /** What a video folder exports from its `index.ts`. */
 export type VideoEntry = {
@@ -21,9 +22,11 @@ export type VideoProps = {
   soundtrack: boolean;
   /** Persistent `[NN.00] LABEL` frame chrome. */
   hud: boolean;
+  /** Draft slate label (`npm run draft` sets `v<N>`): adds a timecode bar under the frame. `null` = off. */
+  slate: string | null;
 };
 
-export const DEFAULT_VIDEO_PROPS: VideoProps = { soundtrack: true, hud: true };
+export const DEFAULT_VIDEO_PROPS: VideoProps = { soundtrack: true, hud: true, slate: null };
 
 const sceneComponent = (entry: VideoEntry, id: string, recipe: string | null): React.FC => {
   const component = entry.scenes?.[id] ?? (recipe ? RECIPES[recipe] : undefined);
@@ -37,7 +40,11 @@ const sceneComponent = (entry: VideoEntry, id: string, recipe: string | null): R
 };
 
 /** The full video: scenes laid end to end on the beat grid, chrome and finishing on top. */
-export const VideoTimeline: React.FC<VideoProps & { entry: VideoEntry }> = ({ entry, soundtrack, hud }) => {
+export const VideoTimeline: React.FC<Omit<VideoProps, 'slate'> & { entry: VideoEntry }> = ({
+  entry,
+  soundtrack,
+  hud,
+}) => {
   const { video, Overlay } = entry;
   const audio = `audio/${video.id}.wav`;
   const hasAudio = getStaticFiles().some((f) => f.name === audio);
@@ -66,13 +73,28 @@ export const VideoTimeline: React.FC<VideoProps & { entry: VideoEntry }> = ({ en
   );
 };
 
-/** One scene's window into the master timeline (HUD, overlays and audio included). */
+/** The full video, with the draft slate under the frame when `slate` is set (the composition grows to fit it). */
+export const VideoFrame: React.FC<VideoProps & { entry: VideoEntry }> = ({ slate, entry, ...props }) =>
+  slate === null ? (
+    <VideoTimeline entry={entry} {...props} />
+  ) : (
+    <AbsoluteFill style={{ backgroundColor: '#000' }}>
+      <div
+        style={{ position: 'relative', width: entry.video.canvas.width, height: entry.video.canvas.height }}
+      >
+        <VideoTimeline entry={entry} {...props} />
+      </div>
+      <Slate video={entry.video} label={slate} />
+    </AbsoluteFill>
+  );
+
+/** One scene's window into the master timeline (HUD, overlays, audio and slate included). */
 export const SceneWindow: React.FC<VideoProps & { entry: VideoEntry; scene: string }> = ({
   scene,
   entry,
   ...props
 }) => (
   <Sequence from={-entry.video.beats(entry.video.scene(scene).start)}>
-    <VideoTimeline entry={entry} {...props} />
+    <VideoFrame entry={entry} {...props} />
   </Sequence>
 );

@@ -14,7 +14,8 @@ const dir = `${VIDEOS_DIR}${id}/`;
 if (existsSync(dir)) {
   throw new Error(`videos/${id} already exists`);
 }
-cpSync(`${VIDEOS_DIR}template/`, dir, { recursive: true });
+// The template's own draft log (if anyone drafted it) isn't the new video's history.
+cpSync(`${VIDEOS_DIR}template/`, dir, { recursive: true, filter: (src) => !src.endsWith('/feedback.md') });
 
 const timeline = `${dir}timeline.ts`;
 const src = readFileSync(timeline, 'utf8');
@@ -49,4 +50,5 @@ Next:
   2. npm run check -- ${id}
   3. npm run review -- ${id}     (contact sheet → out/review/${id}/sheet.png)
   4. npm run dev                 (Studio: ${id}, ${id}-scenes/…)
-  5. npm run render -- ${id}     (→ out/${id}.mp4)`);
+  5. npm run draft -- ${id}      (→ out/drafts/${id}/v1.mp4, for feedback; notes in videos/${id}/feedback.md)
+  6. npm run render -- ${id}     (→ out/${id}.mp4, once the draft is approved)`);

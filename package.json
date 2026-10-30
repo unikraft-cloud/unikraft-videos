@@ -13,7 +13,8 @@
     "render": "node scripts/render.ts",
     "icons": "node scripts/extract-icons.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint kit videos scripts && tsc --noEmit"
+    "lint": "eslint kit videos scripts && tsc --noEmit",
+    "draft": "node scripts/draft.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.529",

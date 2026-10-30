@@ -23,7 +23,9 @@ npm run review -- my-video --scene hook    # … + full-size stills of one scene
 npm run review -- my-video --frames 90,400 # … + full-size stills of chosen frames
 npm run dev                                # Remotion Studio: my-video, my-video-scenes/<NN-scene>
 npm run soundtrack -- my-video             # public/audio/my-video.wav (render does this for you)
-npm run render -- my-video                 # check → soundtrack → out/my-video.mp4
+npm run draft -- my-video                  # check → soundtrack → out/drafts/my-video/vN.mp4 (half-res, slate bar)
+npm run draft -- my-video --scene hook     # … one scene only → vN-hook.mp4 (--scale 1 for full res)
+npm run render -- my-video                 # check → soundtrack → out/my-video.mp4 (final quality)
 npm run lint                               # eslint + tsc
 ```
 
@@ -44,7 +46,31 @@ npm run lint                               # eslint + tsc
    silence the check. `pacing: 'report'` is only for the legacy promo.
 6. **`npm run review`** and look at `sheet.png`. Every tile is a moment where its copy should be
    fully legible. If it isn't, the scene is wrong, whatever the numbers say.
-7. **Render** with `npm run render -- <id>`. Watch the result with sound before calling it done.
+7. **Draft** with `npm run draft -- <id>` and hand the user the `.mp4` path. Iterate in feedback
+   rounds (below) until they sign off.
+8. **Render** with `npm run render -- <id>`. Watch the result with sound before calling it done.
+
+## Feedback rounds
+
+The user prompts, you build, they watch a draft and reply; repeat until they approve. Drafts are cheap
+(half resolution, light encoding, about half the final render time) and every one is numbered.
+
+- **Resuming a video?** Read `videos/<id>/feedback.md` first: it holds every earlier round's notes
+  and decisions. Don't undo something a previous round asked for.
+- **Every draft frame names itself.** The slate bar under the frame shows `vN · time / total · frame ·
+  NN/TT scene · beat in scene`. Ask the user to quote it ("v3 00:12.40, the headline is too fast").
+  Times are master-timeline times, also in scene-only drafts and in `npm run check`'s `start` column.
+- **`npm run draft` appends `## vN` to `feedback.md`.** Under it, write the user's notes on that draft
+  verbatim (with the timecodes they quoted), then `Changed:` what you did about each one before the
+  next draft. Commit `feedback.md` with the video.
+- **Locate a note:** the slate's scene and beat point at the mark to change (marks are beats from the
+  scene start). `npm run review -- <id> --frames <f>` renders a full-size still of the slate's
+  frame, to look at before and after a fix.
+- **Draft scope:** a note about one scene → `--scene <id>` draft for a quick look; anything touching
+  timing, music or several scenes → full draft. The user signs off on a full draft.
+- `check` and `review` still run before every draft; a draft never ships with pacing errors.
+- Live alternative: `npm run dev` (Remotion Studio) scrubs any video or scene window at full quality.
+  The full video's frame counter matches the slate; scene windows count from the scene start.
 
 ## Recipes (`kit/recipes/<name>/plan.ts`: full prop docs live in the types)
 
@@ -115,6 +141,7 @@ Copy `videos/template/scenes/Flow.tsx`. The contract:
 - [ ] `npm run lint` passes.
 - [ ] `sheet.png` reviewed: every tile legible, nothing clipped, nothing under the HUD.
 - [ ] `npm run render -- <id>` watched start to finish **with sound**.
+- [ ] The user signed off on the latest full draft, and `feedback.md` records every round.
 - [ ] If the kit changed: `node kit/audio/generate.ts promo-30s && md5sum public/audio/promo-30s.wav`
       prints `6f96dfc8665492161c866bfeb5ca4001`, and promo stills are unchanged.
 
@@ -126,7 +153,7 @@ kit/
   brand/       logo geometry (per stripe)
   overlays/    Hud (chapter chrome), StripeWipe (brand cut)
   timeline/    grid (FPS, makeGrid, ms) · presets · define (defineVideo) · pacing (checkVideo) · durations (DUR) · review · load
-  video/       VideoTimeline / SceneWindow / VideoEntry · useScene · Compositions · ContactSheet
+  video/       VideoTimeline / VideoFrame / SceneWindow / VideoEntry · useScene · Compositions · ContactSheet · Slate (draft bar)
   recipes/     <name>/{plan.ts, <Name>.tsx, demo.ts} + index.ts (registry) + common.ts
   audio/       procedural soundtrack: dsp · instruments · mixer · fx · score · music · sfx · generate
 videos/
@@ -134,6 +161,6 @@ videos/
   gallery/     every recipe demo in a row
   promo-30s/   the original 30 s promo (bespoke scenes, the visual reference; report-only pacing)
   registry.ts  every video in the Studio
-scripts/       new-video · check · review · render · extract-icons
+scripts/       new-video · check · review · draft · render · extract-icons
 public/        fonts, audio/<id>.wav
 ```

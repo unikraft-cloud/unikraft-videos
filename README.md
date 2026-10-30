@@ -15,6 +15,8 @@ reusable parts, so the next ones keep the look **at a pace people can read**.
 - **Procedural soundtrack** (`kit/audio`): generated from the timeline at any grid tempo, with
   energy levels per section, so a calmer video sounds like the same track played calmer.
 - **Review contact sheet**: one PNG with a tile for every moment where copy should be legible.
+- **Numbered drafts**: fast half-res renders with a timecode slate under the frame, so feedback can
+  point at exact moments; each round's notes live in `videos/<id>/feedback.md`.
 
 ## Quick start
 
@@ -24,7 +26,8 @@ npm run dev                                  # Studio: promo-30s, template, gall
 npm run new-video -- launch-q4 "Q4 launch"   # new video from the template
 npm run check -- launch-q4                   # pacing report
 npm run review -- launch-q4                  # → out/review/launch-q4/sheet.png
-npm run render -- launch-q4                  # → out/launch-q4.mp4 (with soundtrack)
+npm run draft -- launch-q4                   # → out/drafts/launch-q4/v1.mp4 (quick, slate bar, for feedback)
+npm run render -- launch-q4                  # → out/launch-q4.mp4 (final quality, with soundtrack)
 ```
 
 Working with an AI agent? Point it at [`AGENTS.md`](AGENTS.md) (the playbook) and
