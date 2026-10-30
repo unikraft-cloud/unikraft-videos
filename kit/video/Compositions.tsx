@@ -1,6 +1,6 @@
 import type React from 'react';
 import { Composition, Folder } from 'remotion';
-import { FPS, HEIGHT, WIDTH } from '../timeline/grid';
+import { FPS, WIDTH } from '../timeline/grid';
 import { ContactSheet, sheetHeight } from './ContactSheet';
 import { DEFAULT_VIDEO_PROPS, SceneWindow, VideoTimeline, type VideoEntry, type VideoProps } from './Video';
 
@@ -41,8 +41,8 @@ export const VideoCompositions: React.FC<{ entry: VideoEntry }> = ({ entry }) =>
         component={Full}
         durationInFrames={video.durationInFrames}
         fps={FPS}
-        width={WIDTH}
-        height={HEIGHT}
+        width={video.canvas.width}
+        height={video.canvas.height}
         defaultProps={DEFAULT_VIDEO_PROPS}
       />
       <Folder name={`${video.id}-scenes`}>
@@ -53,8 +53,8 @@ export const VideoCompositions: React.FC<{ entry: VideoEntry }> = ({ entry }) =>
             component={Window}
             durationInFrames={video.beats(scene.beats)}
             fps={FPS}
-            width={WIDTH}
-            height={HEIGHT}
+            width={video.canvas.width}
+            height={video.canvas.height}
             defaultProps={{ ...DEFAULT_VIDEO_PROPS, scene: scene.id }}
           />
         ))}

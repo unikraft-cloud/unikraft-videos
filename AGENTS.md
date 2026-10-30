@@ -83,6 +83,9 @@ Copy `videos/template/scenes/Flow.tsx`. The contract:
   and `motion` (`progress`, `pop`, `shake`, `scramble`…).
 - It must be deterministic (no `Math.random`, no CSS transitions) and stay inside `SAFE` (the HUD takes
   the top ~130 px and the bottom rail).
+- `Logo` takes `pace` (default 1) to slow its assembly for calm cards: `pace={1.5}` runs every step
+  1.5× as long. `body="trace"` draws the U's outline, then fades its fill in (no transform) instead
+  of springing it up.
 - If the same custom scene shows up in a second video, turn it into a recipe (`kit/recipes/<name>/`:
   `plan.ts` pure, `<Name>.tsx`, `demo.ts`, one line in `kit/recipes/index.ts`, one scene in
   `videos/gallery`). Follow `statement/` as the reference.
@@ -98,6 +101,10 @@ Copy `videos/template/scenes/Flow.tsx`. The contract:
   syntax (see the terminal demo). Never say "unikernel".
 - **Tempo:** `preset.bpm`, or a grid-exact `bpm` override (72, 75, 90, 100, 120…; `makeGrid`
   rejects the rest).
+- **Canvas:** 1920×1080 by default. `canvas: { width, height }` (even integers) in `defineVideo` sets
+  another frame size, e.g. `{ width: 1440, height: 1440 }` for a square social cut. Recipes, the HUD
+  and `SAFE` are laid out for 1920×1080 only, so other canvases need custom scenes with
+  `chapters: []` (see `videos/r14-harpalyke-end`).
 - **Formatting:** prettier only on files you touched (`npx prettier --write <files>`). The ported
   promo/kit files are deliberately not reformatted.
 - **Commits:** Conventional Commits, sentence-case subject (`feat(recipes): Add quote recipe`).

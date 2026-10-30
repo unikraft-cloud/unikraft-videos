@@ -1,15 +1,21 @@
 import type React from 'react';
 import { AbsoluteFill, Freeze } from 'remotion';
 import { alpha, C, FONT } from '../design/tokens';
-import { FPS, HEIGHT, WIDTH } from '../timeline/grid';
+import { FPS, WIDTH } from '../timeline/grid';
 import { reviewFrames } from '../timeline/review';
 import { VideoTimeline, type VideoEntry } from './Video';
 
-export const SHEET = { columns: 4, thumbW: WIDTH / 4, thumbH: HEIGHT / 4, label: 58, header: 96 } as const;
+export const SHEET = { columns: 4, thumbW: WIDTH / 4, label: 58, header: 96 } as const;
+
+/** Thumbnail scale and height: every canvas is fitted to the fixed thumbnail width. */
+const thumb = (entry: VideoEntry) => {
+  const scale = SHEET.thumbW / entry.video.canvas.width;
+  return { scale, h: Math.round(entry.video.canvas.height * scale) };
+};
 
 export const sheetHeight = (entry: VideoEntry): number => {
   const rows = Math.ceil(reviewFrames(entry.video).length / SHEET.columns);
-  return SHEET.header + rows * (SHEET.thumbH + SHEET.label);
+  return SHEET.header + rows * (thumb(entry).h + SHEET.label);
 };
 
 /**
@@ -19,6 +25,7 @@ export const sheetHeight = (entry: VideoEntry): number => {
 export const ContactSheet: React.FC<{ entry: VideoEntry }> = ({ entry }) => {
   const frames = reviewFrames(entry.video);
   const { video } = entry;
+  const t = thumb(entry);
   return (
     <AbsoluteFill style={{ background: C.slate950, fontFamily: FONT.mono, color: C.slate400 }}>
       <div
@@ -43,17 +50,24 @@ export const ContactSheet: React.FC<{ entry: VideoEntry }> = ({ entry }) => {
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
         {frames.map((f) => (
-          <div key={f.frame} style={{ width: SHEET.thumbW, height: SHEET.thumbH + SHEET.label }}>
+          <div key={f.frame} style={{ width: SHEET.thumbW, height: t.h + SHEET.label }}>
             <div
               style={{
                 width: SHEET.thumbW,
-                height: SHEET.thumbH,
+                height: t.h,
                 overflow: 'hidden',
                 position: 'relative',
                 outline: `1px solid ${alpha(C.slate700, 0.8)}`,
               }}
             >
-              <div style={{ width: WIDTH, height: HEIGHT, transform: 'scale(0.25)', transformOrigin: '0 0' }}>
+              <div
+                style={{
+                  width: video.canvas.width,
+                  height: video.canvas.height,
+                  transform: `scale(${t.scale})`,
+                  transformOrigin: '0 0',
+                }}
+              >
                 <Freeze frame={f.frame}>
                   <VideoTimeline entry={entry} soundtrack={false} hud />
                 </Freeze>

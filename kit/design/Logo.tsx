@@ -13,6 +13,9 @@ import {
 import { EASE, lerp, progress } from './motion';
 import { C } from './tokens';
 
+/** `trace` outline width, in mark units. */
+const TRACE_STROKE = 0.9;
+
 type LogoProps = {
   /** Rendered height in px. */
   height: number;
@@ -25,6 +28,10 @@ type LogoProps = {
   lettersDelay?: number;
   /** Blue bloom behind the mark (0 = off). */
   glow?: number;
+  /** Assembly speed divisor: 1 = as designed, 1.5 = every step takes 1.5× as long (`lettersDelay` included). */
+  pace?: number;
+  /** How the "U" body builds: `spring` (default) springs up from its base; `trace` draws its outline, then fades its fill in, no transform. */
+  body?: 'spring' | 'trace';
   style?: React.CSSProperties;
 };
 
@@ -40,19 +47,24 @@ export const Logo: React.FC<LogoProps> = ({
   letterColor = C.white,
   lettersDelay = 14,
   glow = 0,
+  pace = 1,
+  body: build = 'spring',
   style,
 }) => {
   const frame = useCurrentFrame();
   const id = useId().replace(/:/g, '');
   // A static logo is just an assembly that finished long ago.
-  const t = at === undefined ? 1e6 : frame - at;
+  const t = at === undefined ? 1e6 : (frame - at) / pace;
 
   const vb = wordmark ? WORDMARK_VIEWBOX : MARK_VIEWBOX;
   const width = (height * vb.w) / vb.h;
   const markScale = wordmark ? MARK_IN_WORDMARK_SCALE : 1;
 
+  // spring: the U springs up from its base. trace: its outline draws on, then the fill fades in.
   const body = progress(t, 5, 18, EASE.back);
-  const bodyFade = progress(t, 5, 4, EASE.linear);
+  const bodyFade = build === 'spring' ? progress(t, 5, 4, EASE.linear) : progress(t, 22, 12, EASE.out);
+  const trim = progress(t, 5, 22, EASE.inOut);
+  const outline = build === 'trace' && at !== undefined ? 1 - progress(t, 30, 12, EASE.inOut) : 0;
 
   return (
     <div style={{ position: 'relative', width, height, ...style }}>
@@ -108,8 +120,26 @@ export const Logo: React.FC<LogoProps> = ({
             d={MARK_BODY.d}
             fill={`url(#${id}-body)`}
             opacity={bodyFade}
-            transform={`translate(0 ${MARK_VIEWBOX.h}) scale(1 ${Math.max(0.001, body)}) translate(0 ${-MARK_VIEWBOX.h})`}
+            transform={
+              build === 'spring'
+                ? `translate(0 ${MARK_VIEWBOX.h}) scale(1 ${Math.max(0.001, body)}) translate(0 ${-MARK_VIEWBOX.h})`
+                : undefined
+            }
           />
+          {outline > 0 && trim > 0 && (
+            <path
+              d={MARK_BODY.d}
+              fill="none"
+              stroke={`url(#${id}-body)`}
+              strokeWidth={TRACE_STROKE}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              pathLength={1}
+              strokeDasharray="1 1"
+              strokeDashoffset={1 - trim}
+              opacity={outline}
+            />
+          )}
           {MARK_STRIPES.map((stripe, i) => {
             const p = progress(t, i * 1.5, 12, EASE.out);
             const flash = 1 - progress(t, i * 1.5 + 6, 10, EASE.standard);

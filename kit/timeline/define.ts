@@ -11,7 +11,7 @@
  * Pure data with `.ts`-extension imports only (plain Node loads it).
  */
 import { DUR } from './durations.ts';
-import { makeGrid, type Grid } from './grid.ts';
+import { HEIGHT, makeGrid, WIDTH, type Grid } from './grid.ts';
 import { PRESETS, type Energy, type Preset, type PresetName } from './presets.ts';
 
 export type CueKind =
@@ -87,6 +87,9 @@ export type MusicSpec = { name: MusicSectionName; until?: At; energy?: Energy };
 /** A resolved music section, in absolute beats. */
 export type MusicSection = { from: number; to: number; name: MusicSectionName; energy: Energy };
 
+/** Frame size in px: positive even integers (H.264 yuv420p). */
+export type Canvas = { width: number; height: number };
+
 export type VideoSpec = {
   /** Composition id and soundtrack file name (`public/audio/<id>.wav`): a–z, 0–9, `-`. */
   id: string;
@@ -96,6 +99,11 @@ export type VideoSpec = {
   bpm?: number;
   /** `'report'`: pacing errors are printed but don't fail `npm run check` (legacy cuts only). Default `'enforce'`. */
   pacing?: 'enforce' | 'report';
+  /**
+   * Frame size in px. Default 1920×1080, the size every recipe, the HUD and `SAFE` are laid out for;
+   * other sizes (square or vertical social cuts) need custom scenes that lay out for them.
+   */
+  canvas?: Canvas;
   /** HUD chapter labels; scenes reference them 1-based. */
   chapters: readonly string[];
   scenes: readonly SceneInput[];
@@ -126,6 +134,7 @@ export type Video = {
   preset: Preset;
   pacing: 'enforce' | 'report';
   grid: Grid;
+  canvas: Canvas;
   totalBeats: number;
   durationInFrames: number;
   chapters: readonly string[];
@@ -168,6 +177,10 @@ export const defineVideo = (spec: VideoSpec): Video => {
   const preset: Preset = spec.bpm ? { ...base, bpm: spec.bpm } : base;
   const grid = makeGrid(preset.bpm);
   const ctx: PlanContext = { preset, grid };
+  const canvas = spec.canvas ?? { width: WIDTH, height: HEIGHT };
+  if (![canvas.width, canvas.height].every((n) => Number.isInteger(n) && n > 0 && n % 2 === 0)) {
+    throw new Error(`${spec.id}: canvas ${canvas.width}×${canvas.height} must be positive even integers`);
+  }
 
   const scenes: Scene[] = [];
   let start = 0;
@@ -269,6 +282,7 @@ export const defineVideo = (spec: VideoSpec): Video => {
     preset,
     pacing: spec.pacing ?? 'enforce',
     grid,
+    canvas,
     totalBeats,
     durationInFrames: grid.beats(totalBeats),
     chapters: spec.chapters,

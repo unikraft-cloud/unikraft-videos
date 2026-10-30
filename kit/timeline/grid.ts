@@ -1,11 +1,12 @@
 /**
- * Canvas and clock. Every video renders 1920×1080 at 60 fps; tempo is per video.
+ * Canvas and clock. Videos render at 60 fps, 1920×1080 unless they set `canvas`; tempo is per video.
  *
  * Pure data, `.ts`-extension imports only: this module is loaded by plain Node
  * (type stripping) from the soundtrack generator and the pacing checker.
  */
 
 export const FPS = 60;
+/** Default canvas (`VideoSpec.canvas`). */
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
 /** Soundtrack sample rate (kit/audio/dsp.ts `SR`). */
