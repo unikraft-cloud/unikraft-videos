@@ -111,7 +111,9 @@ Copy `videos/template/scenes/Flow.tsx`. The contract:
   the top ~130 px and the bottom rail).
 - `Logo` takes `pace` (default 1) to slow its assembly for calm cards: `pace={1.5}` runs every step
   1.5× as long. `body="trace"` draws the U's outline, then fades its fill in (no transform) instead
-  of springing it up.
+  of springing it up. `font="display"` sets the wordmark as live Inter Display text (InterVariable
+  at `opsz` 32) instead of the outlines; `letters="fade"` fades the letters in one by one with no
+  rise.
 - If the same custom scene shows up in a second video, turn it into a recipe (`kit/recipes/<name>/`:
   `plan.ts` pure, `<Name>.tsx`, `demo.ts`, one line in `kit/recipes/index.ts`, one scene in
   `videos/gallery`). Follow `statement/` as the reference.

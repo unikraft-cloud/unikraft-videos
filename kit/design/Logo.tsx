@@ -11,7 +11,16 @@ import {
   WORDMARK_VIEWBOX,
 } from '../brand/logo-data';
 import { EASE, lerp, progress } from './motion';
-import { C } from './tokens';
+import { C, FONT } from './tokens';
+
+const WORDMARK_TEXT = 'Unikraft';
+/**
+ * `font="display"` lockup, in wordmark viewBox units: matched to the outline wordmark's cap
+ * height (87 units, U top 15.5 → baseline 102.7) and its left edge (x 145.4).
+ */
+const DISPLAY = { x: 140, baseline: 102.7, size: 124, weight: 600, tracking: '-0.02em' } as const;
+/** The display lockup's viewBox: narrower than the outline wordmark, so the lockup stays centred. */
+const DISPLAY_VIEWBOX = { w: 572, h: WORDMARK_VIEWBOX.h } as const;
 
 /** `trace` outline width, in mark units. */
 const TRACE_STROKE = 0.9;
@@ -32,6 +41,10 @@ type LogoProps = {
   pace?: number;
   /** How the "U" body builds: `spring` (default) springs up from its base; `trace` draws its outline, then fades its fill in, no transform. */
   body?: 'spring' | 'trace';
+  /** Wordmark letterforms: `svg` (default) the brand outlines; `display` live "Unikraft" text in Inter Display (InterVariable at `opsz` 32). */
+  font?: 'svg' | 'display';
+  /** How the letters arrive: `rise` (default) fade in while rising; `fade` opacity only, no transform. */
+  letters?: 'rise' | 'fade';
   style?: React.CSSProperties;
 };
 
@@ -49,6 +62,8 @@ export const Logo: React.FC<LogoProps> = ({
   glow = 0,
   pace = 1,
   body: build = 'spring',
+  font = 'svg',
+  letters = 'rise',
   style,
 }) => {
   const frame = useCurrentFrame();
@@ -56,7 +71,7 @@ export const Logo: React.FC<LogoProps> = ({
   // A static logo is just an assembly that finished long ago.
   const t = at === undefined ? 1e6 : (frame - at) / pace;
 
-  const vb = wordmark ? WORDMARK_VIEWBOX : MARK_VIEWBOX;
+  const vb = wordmark ? (font === 'display' ? DISPLAY_VIEWBOX : WORDMARK_VIEWBOX) : MARK_VIEWBOX;
   const width = (height * vb.w) / vb.h;
   const markScale = wordmark ? MARK_IN_WORDMARK_SCALE : 1;
 
@@ -64,6 +79,8 @@ export const Logo: React.FC<LogoProps> = ({
   const body = progress(t, 5, 18, EASE.back);
   const bodyFade = build === 'spring' ? progress(t, 5, 4, EASE.linear) : progress(t, 22, 12, EASE.out);
   const trim = progress(t, 5, 22, EASE.inOut);
+  const letterIn = (i: number) =>
+    letters === 'rise' ? progress(t, lettersDelay + i * 2, 16, EASE.out) : progress(t, lettersDelay + i * 3, 18, EASE.standard);
   const outline = build === 'trace' && at !== undefined ? 1 - progress(t, 30, 12, EASE.inOut) : 0;
 
   return (
@@ -153,18 +170,45 @@ export const Logo: React.FC<LogoProps> = ({
         </g>
 
         {wordmark &&
+          font === 'svg' &&
           WORDMARK_LETTERS.map((letter, i) => {
-            const p = progress(t, lettersDelay + i * 2, 16, EASE.out);
+            const p = letterIn(i);
             return (
               <path
                 key={letter.x}
                 d={letter.d}
                 fill={letterColor}
                 opacity={p}
-                transform={`translate(0 ${lerp(38, 0, p)})`}
+                transform={letters === 'rise' ? `translate(0 ${lerp(38, 0, p)})` : undefined}
               />
             );
           })}
+        {wordmark && font === 'display' && (
+          <text
+            x={DISPLAY.x}
+            y={DISPLAY.baseline}
+            fill={letterColor}
+            // `rise` moves the whole word: tspans can't be translated one by one.
+            transform={letters === 'rise' ? `translate(0 ${lerp(38, 0, letterIn(0))})` : undefined}
+            style={{
+              fontFamily: FONT.sans,
+              fontSize: DISPLAY.size,
+              fontWeight: DISPLAY.weight,
+              fontVariationSettings: "'opsz' 32",
+              letterSpacing: DISPLAY.tracking,
+            }}
+          >
+            {WORDMARK_TEXT.split('').map((ch, i) => {
+              const p = letterIn(i);
+              return (
+                // Opacity on a tspan is ignored by Chrome; fill-opacity is not.
+                <tspan key={i} fillOpacity={p}>
+                  {ch}
+                </tspan>
+              );
+            })}
+          </text>
+        )}
       </svg>
     </div>
   );
